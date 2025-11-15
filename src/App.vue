@@ -1,13 +1,18 @@
 <script setup lang="ts">
 import axios from 'axios';
-import { ref } from 'vue';
+import { nextTick, onBeforeUnmount, ref } from 'vue';
 import { API_URL } from './constants';
-import { QrcodeStream } from 'vue-qrcode-reader';
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 
 const codigo = ref('');
 const productoNoEncontrado = ref(false);
 const mostrandoCamara = ref(false);
 const productoSeleccionado = ref<{ nombre: string; precio: number } | null>(null);
+const cameraError = ref<string | null>(null);
+
+
+let scanner: Html5Qrcode | null = null;
+
 
 const searchProduct = () => {
   axios.get(`${API_URL}/productos/publico?busqueda=${codigo.value}`)
@@ -21,22 +26,72 @@ const searchProduct = () => {
     });
 };
 
-const openCamera = () => {
+const openCamera = async () => {
+  cameraError.value = null;
   mostrandoCamara.value = true;
+  await nextTick();
+  await startScanner();
 };
 
-const onInit = (promise: Promise<void>) => {
-  promise.catch((err) => {
-    console.error("Error al iniciar cámara:", err);
+const startScanner = async () => {
+  if (!scanner) {
+    scanner = new Html5Qrcode('reader', {
+      formatsToSupport: [
+        Html5QrcodeSupportedFormats.QR_CODE,
+        Html5QrcodeSupportedFormats.CODE_128,
+        Html5QrcodeSupportedFormats.EAN_13,
+        Html5QrcodeSupportedFormats.EAN_8
+      ],
+      experimentalFeatures: {
+        useBarCodeDetectorIfSupported: true
+      },
+      verbose: true
+    });
+  }
+
+  try {
+    await scanner.start(
+      { facingMode: 'environment' }, // cámara trasera
+      {
+        fps: 10,
+        qrbox: { width: 320, height: 160 }
+      },
+      (decodedText, decodedResult) => {
+        console.log(decodedText);
+        console.log(decodedResult);
+        codigo.value = decodedText;
+        stopScanner();
+        searchProduct();
+      },
+      (error) => {
+        console.error(error);
+        cameraError.value = error;
+      }
+    );
+  } catch (err: any) {
+    console.error(err);
+    cameraError.value = err?.message ?? 'No se pudo iniciar la cámara';
     mostrandoCamara.value = false;
-  });
+  }
 };
 
-const onDecode = (result: string) => {
-  codigo.value = result;
+const stopScanner = async () => {
+  if (scanner) {
+    try {
+      await scanner.stop();
+      await scanner.clear();
+    } catch (err) {
+      console.warn('Scanner stop error', err);
+    }
+  }
   mostrandoCamara.value = false;
-  searchProduct();
 };
+
+onBeforeUnmount(() => {
+  if (scanner) {
+    scanner.stop().catch(() => { });
+  }
+});
 
 const clearProduct = () => {
   productoSeleccionado.value = null;
@@ -67,8 +122,7 @@ const clearProduct = () => {
       class="bg-white rounded-lg shadow-lg p-4 w-full max-w-md flex flex-col items-center gap-4">
       <p class="text-blue-900 font-semibold">Escaneando...</p>
 
-      <!-- Scanner de vue-qrcode-reader -->
-      <qrcode-stream @decode="onDecode" @init="onInit" :formats="['qr_code', 'code_128']" />
+      <div id="reader" style="width: 300px"></div>
 
       <button @click="mostrandoCamara = false"
         class="mt-2 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition">
