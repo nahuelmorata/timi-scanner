@@ -1,14 +1,22 @@
 <script setup lang="ts">
+import axios from 'axios';
 import { ref } from 'vue';
+import { API_URL } from './constants';
 
 const codigo = ref('');
+const productoNoEncontrado = ref(false);
 const productoSeleccionado = ref<{ nombre: string; precio: number } | null>(null);
 
 const searchProduct = () => {
-  productoSeleccionado.value = {
-    nombre: 'Producto 1',
-    precio: 100
-  };
+  axios.get(`${API_URL}/productos/publico/${codigo.value}`)
+    .then(response => {
+      productoSeleccionado.value = response.data;
+      productoNoEncontrado.value = response.data == null;
+    })
+    .catch(error => {
+      console.error(error);
+      productoNoEncontrado.value = true;
+    });
 };
 
 const openCamera = () => {
@@ -17,6 +25,7 @@ const openCamera = () => {
 
 const clearProduct = () => {
   productoSeleccionado.value = null;
+  productoNoEncontrado.value = false;
 };
 </script>
 
@@ -56,6 +65,10 @@ const clearProduct = () => {
         class="w-full mt-6 bg-gray-300 hover:bg-gray-400 text-blue-900 font-semibold py-2 rounded-lg transition">
         Limpiar
       </button>
+    </div>
+
+    <div v-if="productoNoEncontrado" class="bg-white rounded-lg shadow-lg p-8 text-center text-red-500">
+      <p>Producto no encontrado</p>
     </div>
 
     <div v-else class="bg-white rounded-lg shadow-lg p-8 text-center text-gray-400">
