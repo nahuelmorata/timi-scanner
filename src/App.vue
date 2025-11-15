@@ -17,8 +17,14 @@ let scanner: Html5Qrcode | null = null;
 const searchProduct = () => {
   axios.get(`${API_URL}/productos/publico?busqueda=${codigo.value}`)
     .then(response => {
+      if (response.status === 204 || !response.data) {
+        productoSeleccionado.value = null;
+        productoNoEncontrado.value = true;
+        return;
+      }
+
       productoSeleccionado.value = response.data;
-      productoNoEncontrado.value = response.data == null;
+      productoNoEncontrado.value = false;
     })
     .catch(error => {
       console.error(error);
