@@ -2,9 +2,11 @@
 import axios from 'axios';
 import { ref } from 'vue';
 import { API_URL } from './constants';
+import { QrcodeStream } from 'vue-qrcode-reader';
 
 const codigo = ref('');
 const productoNoEncontrado = ref(false);
+const mostrandoCamara = ref(false);
 const productoSeleccionado = ref<{ nombre: string; precio: number } | null>(null);
 
 const searchProduct = () => {
@@ -20,7 +22,20 @@ const searchProduct = () => {
 };
 
 const openCamera = () => {
-  alert('Abriendo cámara');
+  mostrandoCamara.value = true;
+};
+
+const onInit = (promise: Promise<void>) => {
+  promise.catch((err) => {
+    console.error("Error al iniciar cámara:", err);
+    mostrandoCamara.value = false;
+  });
+};
+
+const onDecode = (result: string) => {
+  codigo.value = result;
+  mostrandoCamara.value = false;
+  searchProduct();
 };
 
 const clearProduct = () => {
@@ -45,6 +60,19 @@ const clearProduct = () => {
       <button @click="searchProduct"
         class="w-full bg-orange-300 hover:bg-orange-400 text-blue-900 font-bold py-3 rounded-lg transition">
         Buscar
+      </button>
+    </div>
+
+    <div v-if="mostrandoCamara"
+      class="bg-white rounded-lg shadow-lg p-4 w-full max-w-md flex flex-col items-center gap-4">
+      <p class="text-blue-900 font-semibold">Escaneando...</p>
+
+      <!-- Scanner de vue-qrcode-reader -->
+      <qrcode-stream @decode="onDecode" @init="onInit" :formats="['qr_code', 'code_128']" />
+
+      <button @click="mostrandoCamara = false"
+        class="mt-2 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition">
+        Cancelar
       </button>
     </div>
 
