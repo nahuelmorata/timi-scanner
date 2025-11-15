@@ -54,7 +54,7 @@ const startScanner = async () => {
       { facingMode: 'environment' }, // cámara trasera
       {
         fps: 10,
-        qrbox: { width: 320, height: 160 }
+        //qrbox: { width: 320, height: 160 }
       },
       (decodedText, decodedResult) => {
         console.log(decodedText);
@@ -63,10 +63,7 @@ const startScanner = async () => {
         stopScanner();
         searchProduct();
       },
-      (error) => {
-        console.error(error);
-        cameraError.value = error;
-      }
+      () => { }
     );
   } catch (err: any) {
     console.error(err);
@@ -79,7 +76,7 @@ const stopScanner = async () => {
   if (scanner) {
     try {
       await scanner.stop();
-      await scanner.clear();
+      scanner.clear();
     } catch (err) {
       console.warn('Scanner stop error', err);
     }
@@ -118,14 +115,10 @@ const clearProduct = () => {
       </button>
     </div>
 
-    <div v-if="mostrandoCamara"
-      class="bg-white rounded-lg shadow-lg p-4 w-full max-w-md flex flex-col items-center gap-4">
-      <p class="text-blue-900 font-semibold">Escaneando...</p>
+    <div v-if="mostrandoCamara" class="mt-4 flex flex-col items-center gap-2">
+      <div id="reader" style="width: 320px; max-width: 100%;"></div>
 
-      <div id="reader" style="width: 300px"></div>
-
-      <button @click="mostrandoCamara = false"
-        class="mt-2 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition">
+      <button @click="stopScanner" class="bg-red-500 text-white px-3 py-1 rounded">
         Cancelar
       </button>
     </div>
