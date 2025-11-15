@@ -1,1 +1,1 @@
-export const API_URL = 'https://timi-api.nahuelmorata.com.ar'
+export const API_URL = 'https://timi-v2-api.nahuelmorata.com.ar/'
