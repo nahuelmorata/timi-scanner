@@ -8,7 +8,7 @@ const productoNoEncontrado = ref(false);
 const productoSeleccionado = ref<{ nombre: string; precio: number } | null>(null);
 
 const searchProduct = () => {
-  axios.get(`${API_URL}/productos/publico/${codigo.value}`)
+  axios.get(`${API_URL}/productos/publico?busqueda=${codigo.value}`)
     .then(response => {
       productoSeleccionado.value = response.data;
       productoNoEncontrado.value = response.data == null;
