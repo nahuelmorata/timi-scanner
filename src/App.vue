@@ -34,8 +34,6 @@ const searchProduct = () => {
 };
 
 const openCamera = async () => {
-  const camaras = await Html5Qrcode.getCameras();
-  alert("camaras ids: " + JSON.stringify(camaras));
   cameraError.value = null;
   mostrandoCamara.value = true;
   await nextTick();
@@ -59,13 +57,14 @@ const startScanner = async () => {
   }
 
   try {
+    const camaras = await Html5Qrcode.getCameras();
     await scanner.start(
-      { facingMode: 'environment' }, // cámara trasera
+      camaras == null || camaras.length === 0 ? { facingMode: 'environment' } : camaras[0]!.id,
       {
         fps: 10,
         //qrbox: { width: 320, height: 160 }
       },
-      (decodedText, decodedResult) => {
+      (decodedText) => {
         codigo.value = decodedText;
         stopScanner();
         searchProduct();
