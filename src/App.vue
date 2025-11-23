@@ -125,7 +125,7 @@ const clearProduct = () => {
 
     <div v-if="mostrandoCamara" class="mt-4 flex flex-col items-center gap-2">
       <div id="reader" style="width: 320px; max-width: 100%;"></div>
-      <img v-if="mostrarPlaceholder" src="https://placehold.co/320" alt="Placeholder">
+      <img v-if="mostrarPlaceholder" src="https://placehold.co/320?text=Preparando..." alt="Placeholder">
 
       <button @click="stopScanner" class="bg-red-500 text-white px-3 py-1 rounded">
         Cancelar
