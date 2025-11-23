@@ -60,12 +60,11 @@ const startScanner = async () => {
   }
 
   try {
-    const camaras = await Html5Qrcode.getCameras();
     await scanner.start(
-      camaras == null || camaras.length === 0 ? { facingMode: 'environment' } : camaras[1]!.id,
+      { facingMode: 'environment' },
       {
         fps: 10,
-        //qrbox: { width: 320, height: 160 }
+        qrbox: { width: 320, height: 160 }
       },
       (decodedText) => {
         codigo.value = decodedText;
@@ -75,9 +74,9 @@ const startScanner = async () => {
       () => { }
     );
     mostrarPlaceholder.value = false;
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error(err);
-    cameraError.value = err?.message ?? 'No se pudo iniciar la cámara';
+    cameraError.value = (err as Error)?.message ?? 'No se pudo iniciar la cámara';
     mostrandoCamara.value = false;
   }
 };
@@ -112,17 +111,18 @@ const clearProduct = () => {
     <img src="/logo.svg" alt="Logo" class="w-60 mb-4" />
     <h1 class="text-3xl text-blue-900 font-bold">Lector de códigos</h1>
 
-    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
-      <div class="flex gap-3 mb-4">
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6 flex flex-col gap-4">
+      <button @click="openCamera"
+        class="bg-blue-900 hover:bg-blue-800 text-white px-6 py-3 rounded-lg font-semibold w-full">
+        Escanear código
+        <FontAwesomeIcon :icon="faCamera" />
+      </button>
+      <div class="flex gap-4">
         <input v-model="codigo" @keyup.enter="searchProduct" type="text" placeholder="Ingresa el código..."
           class="flex-1 px-4 py-3 border-2 border-blue-900 rounded-lg focus:outline-none focus:border-orange-300" />
-        <button @click="openCamera"
-          class="bg-blue-900 hover:bg-blue-800 text-white px-6 py-3 rounded-lg font-semibold transition">
-          <FontAwesomeIcon :icon="faCamera" />
-        </button>
       </div>
       <button @click="searchProduct"
-        class="w-full bg-orange-300 hover:bg-orange-400 text-blue-900 font-bold py-3 rounded-lg transition">
+        class="w-full bg-orange-300 hover:bg-orange-400 text-blue-900 font-bold py-3 rounded-lg">
         Buscar
       </button>
     </div>
@@ -164,5 +164,3 @@ const clearProduct = () => {
     </div>
   </div>
 </template>
-
-<style scoped></style>
