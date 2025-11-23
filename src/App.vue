@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import axios from 'axios';
-import { nextTick, onBeforeUnmount, ref } from 'vue';
+import { nextTick, onBeforeUnmount, ref, onMounted } from 'vue';
 import { API_URL } from './constants';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 
@@ -96,6 +96,10 @@ onBeforeUnmount(() => {
   }
 });
 
+onMounted(() => {
+  openCamera();
+});
+
 const clearProduct = () => {
   productoSeleccionado.value = null;
   productoNoEncontrado.value = false;
@@ -104,6 +108,7 @@ const clearProduct = () => {
 
 <template>
   <div class="flex flex-col justify-center items-center h-screen bg-orange-300 gap-4 p-4">
+    <img src="/logo.svg" alt="Logo" class="w-60 mb-4"></img>
     <h1 class="text-3xl text-blue-900 font-bold">Lector de códigos</h1>
 
     <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
@@ -121,7 +126,7 @@ const clearProduct = () => {
       </button>
     </div>
 
-    <div v-if="mostrandoCamara" class="mt-4 flex flex-col items-center gap-2">
+    <div class="mt-4 flex flex-col items-center gap-2">
       <div id="reader" style="width: 320px; max-width: 100%;"></div>
 
       <button @click="stopScanner" class="bg-red-500 text-white px-3 py-1 rounded">
