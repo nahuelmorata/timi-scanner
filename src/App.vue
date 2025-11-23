@@ -3,6 +3,9 @@ import axios from 'axios';
 import { nextTick, onBeforeUnmount, ref } from 'vue';
 import { API_URL } from './constants';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { faCamera } from '@fortawesome/free-solid-svg-icons'
+
 
 const codigo = ref('');
 const productoNoEncontrado = ref(false);
@@ -106,7 +109,7 @@ const clearProduct = () => {
 
 <template>
   <div class="flex flex-col justify-center items-center h-screen bg-orange-300 gap-4 p-4">
-    <img src="/logo.svg" alt="Logo" class="w-60 mb-4"></img>
+    <img src="/logo.svg" alt="Logo" class="w-60 mb-4" />
     <h1 class="text-3xl text-blue-900 font-bold">Lector de códigos</h1>
 
     <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
@@ -115,7 +118,7 @@ const clearProduct = () => {
           class="flex-1 px-4 py-3 border-2 border-blue-900 rounded-lg focus:outline-none focus:border-orange-300" />
         <button @click="openCamera"
           class="bg-blue-900 hover:bg-blue-800 text-white px-6 py-3 rounded-lg font-semibold transition">
-          📷
+          <FontAwesomeIcon :icon="faCamera" />
         </button>
       </div>
       <button @click="searchProduct"
