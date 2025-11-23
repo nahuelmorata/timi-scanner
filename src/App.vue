@@ -59,7 +59,7 @@ const startScanner = async () => {
   try {
     const camaras = await Html5Qrcode.getCameras();
     await scanner.start(
-      camaras == null || camaras.length === 0 ? { facingMode: 'environment' } : camaras[0]!.id,
+      camaras == null || camaras.length === 0 ? { facingMode: 'environment' } : camaras[1]!.id,
       {
         fps: 10,
         //qrbox: { width: 320, height: 160 }
