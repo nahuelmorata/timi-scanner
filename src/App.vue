@@ -34,6 +34,8 @@ const searchProduct = () => {
 };
 
 const openCamera = async () => {
+  const camaras = await Html5Qrcode.getCameras();
+  alert("camaras ids: " + JSON.stringify(camaras));
   cameraError.value = null;
   mostrandoCamara.value = true;
   await nextTick();
