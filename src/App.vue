@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import axios from 'axios';
-import { nextTick, onBeforeUnmount, ref, onMounted } from 'vue';
+import { nextTick, onBeforeUnmount, ref } from 'vue';
 import { API_URL } from './constants';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 
@@ -9,6 +9,7 @@ const productoNoEncontrado = ref(false);
 const mostrandoCamara = ref(false);
 const productoSeleccionado = ref<{ nombre: string; precio: number } | null>(null);
 const cameraError = ref<string | null>(null);
+const mostrarPlaceholder = ref(true);
 
 
 let scanner: Html5Qrcode | null = null;
@@ -63,14 +64,13 @@ const startScanner = async () => {
         //qrbox: { width: 320, height: 160 }
       },
       (decodedText, decodedResult) => {
-        console.log(decodedText);
-        console.log(decodedResult);
         codigo.value = decodedText;
         stopScanner();
         searchProduct();
       },
       () => { }
     );
+    mostrarPlaceholder.value = false;
   } catch (err: any) {
     console.error(err);
     cameraError.value = err?.message ?? 'No se pudo iniciar la cámara';
@@ -81,6 +81,7 @@ const startScanner = async () => {
 const stopScanner = async () => {
   if (scanner) {
     try {
+      mostrarPlaceholder.value = true;
       await scanner.stop();
       scanner.clear();
     } catch (err) {
@@ -94,10 +95,6 @@ onBeforeUnmount(() => {
   if (scanner) {
     scanner.stop().catch(() => { });
   }
-});
-
-onMounted(() => {
-  openCamera();
 });
 
 const clearProduct = () => {
@@ -126,8 +123,9 @@ const clearProduct = () => {
       </button>
     </div>
 
-    <div class="mt-4 flex flex-col items-center gap-2">
+    <div v-if="mostrandoCamara" class="mt-4 flex flex-col items-center gap-2">
       <div id="reader" style="width: 320px; max-width: 100%;"></div>
+      <img v-if="mostrarPlaceholder" src="https://placehold.co/320" alt="Placeholder">
 
       <button @click="stopScanner" class="bg-red-500 text-white px-3 py-1 rounded">
         Cancelar
@@ -153,7 +151,7 @@ const clearProduct = () => {
       </button>
     </div>
 
-    <div v-if="productoNoEncontrado" class="bg-white rounded-lg shadow-lg p-8 text-center text-red-500">
+    <div v-else-if="productoNoEncontrado" class="bg-white rounded-lg shadow-lg p-8 text-center text-red-500">
       <p>Producto no encontrado</p>
     </div>
 
