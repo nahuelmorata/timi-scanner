@@ -18,6 +18,7 @@ export default defineConfig(async ({ mode }) => {
   }
 
   return {
+    base: '/scanner',
     plugins,
     resolve: {
       alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
