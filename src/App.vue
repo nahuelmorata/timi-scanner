@@ -107,7 +107,7 @@ const clearProduct = () => {
 </script>
 
 <template>
-  <div class="flex flex-col justify-center items-center bg-orange-300 gap-4 p-4 overflow-auto">
+  <div class="grow flex flex-col justify-center items-center bg-orange-300 gap-4 p-4 overflow-auto">
     <img src="/logo.svg" alt="Logo" class="w-60 mb-4" />
     <h1 class="text-3xl text-blue-900 font-bold">Lector de códigos</h1>
 
