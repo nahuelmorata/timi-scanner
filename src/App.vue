@@ -1,11 +1,18 @@
 <script setup lang="ts">
 import axios from 'axios';
-import { nextTick, onBeforeUnmount, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, ref } from 'vue';
 import { API_URL } from './constants';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faCamera } from '@fortawesome/free-solid-svg-icons'
+import CustomSelect from './components/CustomSelect.vue'
+import type { SelectOption } from './components/types';
 
+type Interes = {
+  id: number;
+  nombre: string;
+  valor: number;
+}
 
 const codigo = ref('');
 const productoNoEncontrado = ref(false);
@@ -13,7 +20,12 @@ const mostrandoCamara = ref(false);
 const productoSeleccionado = ref<{ nombre: string; precio: number } | null>(null);
 const cameraError = ref<string | null>(null);
 const mostrarPlaceholder = ref(true);
-
+const interes = ref<Interes[]>([
+  { id: 1, nombre: 'Efectivo/Transf/QR/Debito', valor: .9 },
+  { id: 2, nombre: 'Precio de lista', valor: 1 },
+]);
+const selectOptionInteres = computed(() => interes.value.map(i => ({ id: i.id, label: i.nombre, value: i } as SelectOption<Interes>)))
+const interesSeleccionado = ref<Interes>(interes.value[1]!);
 
 let scanner: Html5Qrcode | null = null;
 
@@ -107,7 +119,7 @@ const clearProduct = () => {
 </script>
 
 <template>
-  <div class="grow flex flex-col justify-center items-center bg-orange-300 gap-4 p-4 overflow-auto">
+  <div class="flex flex-col items-center bg-orange-300 gap-4 p-4 overflow-y-auto min-h-screen">
     <img src="/logo.svg" alt="Logo" class="w-60 mb-4" />
     <h1 class="text-3xl text-blue-900 font-bold">Lector de códigos</h1>
 
@@ -136,21 +148,23 @@ const clearProduct = () => {
       </button>
     </div>
 
-    <div v-if="productoSeleccionado" class="bg-white rounded-lg shadow-lg p-8 text-center">
+    <div v-if="productoSeleccionado" class="bg-white rounded-lg shadow-lg p-8 text-center flex flex-col gap-8">
 
-      <h2 class="text-2xl font-bold text-blue-900 mb-4">
+      <h2 class="text-xl font-bold text-blue-900">
         {{ productoSeleccionado.nombre }}
       </h2>
 
       <div class="bg-orange-300 rounded-lg p-6">
-        <p class="text-sm text-blue-900 mb-2">Precio</p>
-        <p class="text-4xl font-bold text-blue-900">
-          ${{ productoSeleccionado.precio.toFixed(2) }}
+        <p class="text-xl text-blue-900 mb-2">Precio</p>
+        <p class="text-3xl font-bold text-blue-900">
+          ${{ (productoSeleccionado.precio * interesSeleccionado.valor).toFixed(2) }}
         </p>
       </div>
 
+      <CustomSelect v-model="interesSeleccionado" :options="selectOptionInteres" @change="searchProduct" />
+
       <button @click="clearProduct"
-        class="w-full mt-6 bg-gray-300 hover:bg-gray-400 text-blue-900 font-semibold py-2 rounded-lg transition">
+        class="w-full bg-gray-300 hover:bg-gray-400 text-blue-900 font-semibold py-2 rounded-lg transition">
         Limpiar
       </button>
     </div>
