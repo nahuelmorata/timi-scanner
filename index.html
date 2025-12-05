@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" href="/favicon.ico" />
@@ -8,6 +8,17 @@
     <title>Buscador</title>
   </head>
   <body>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-J2ZFVNQKSH"></script>
+    <script>
+      window.dataLayer = window.dataLayer || []
+      function gtag() {
+        dataLayer.push(arguments)
+      }
+      gtag('js', new Date())
+
+      gtag('config', 'G-J2ZFVNQKSH')
+    </script>
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
