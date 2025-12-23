@@ -1,59 +1,71 @@
 <script setup lang="ts">
-import axios from 'axios';
-import { computed, nextTick, onBeforeUnmount, ref } from 'vue';
-import { API_URL } from './constants';
-import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
+import axios from 'axios'
+import { computed, nextTick, onBeforeUnmount, ref } from 'vue'
+import { API_URL } from './constants'
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faCamera } from '@fortawesome/free-solid-svg-icons'
 import CustomSelect from './components/CustomSelect.vue'
-import type { SelectOption } from './components/types';
+import type { SelectOption } from './components/types'
 
 type Interes = {
-  id: number;
-  nombre: string;
-  valor: number;
+  id: number
+  nombre: string
+  valor: number
 }
 
-const codigo = ref('');
-const productoNoEncontrado = ref(false);
-const mostrandoCamara = ref(false);
-const productoSeleccionado = ref<{ nombre: string; precio: number } | null>(null);
-const cameraError = ref<string | null>(null);
-const mostrarPlaceholder = ref(true);
+const codigo = ref('')
+const productoNoEncontrado = ref(false)
+const mostrandoCamara = ref(false)
+const productoSeleccionado = ref<{ nombre: string; precio: number } | null>(null)
+const cameraError = ref<string | null>(null)
+const mostrarPlaceholder = ref(true)
 const interes = ref<Interes[]>([
-  { id: 1, nombre: 'Efectivo/Transf/QR/Debito', valor: .9 },
+  { id: 1, nombre: 'Efectivo/Transf/QR/Debito', valor: 0.9 },
   { id: 2, nombre: 'Precio de lista', valor: 1 },
-]);
-const selectOptionInteres = computed(() => interes.value.map(i => ({ id: i.id, label: i.nombre, value: i } as SelectOption<Interes>)))
-const interesSeleccionado = ref<Interes>(interes.value[1]!);
+])
+const selectOptionInteres = computed(() =>
+  interes.value.map((i) => ({ id: i.id, label: i.nombre, value: i }) as SelectOption<Interes>),
+)
+const interesSeleccionado = ref<Interes>(interes.value[1]!)
+const cameraContainerRef = ref<HTMLElement | null>(null)
 
-let scanner: Html5Qrcode | null = null;
+let scanner: Html5Qrcode | null = null
 
+const searchProduct = async () => {
+  let response
+  try {
+    response = await axios.get(`${API_URL}/productos/publico?busqueda=${codigo.value}`)
+  } catch (error) {
+    console.error(error)
+    productoNoEncontrado.value = true
+    return
+  }
 
-const searchProduct = () => {
-  axios.get(`${API_URL}/productos/publico?busqueda=${codigo.value}`)
-    .then(response => {
-      if (response.status === 204 || !response.data) {
-        productoSeleccionado.value = null;
-        productoNoEncontrado.value = true;
-        return;
-      }
+  if (response.status === 204 || !response.data) {
+    productoSeleccionado.value = null
+    productoNoEncontrado.value = true
+    return
+  }
 
-      productoSeleccionado.value = response.data;
-      productoNoEncontrado.value = false;
-    })
-    .catch(error => {
-      console.error(error);
-      productoNoEncontrado.value = true;
-    });
-};
+  productoSeleccionado.value = response.data
+  productoNoEncontrado.value = false
+}
 
 const openCamera = async () => {
-  cameraError.value = null;
-  mostrandoCamara.value = true;
-  await nextTick();
-  await startScanner();
-};
+  cameraError.value = null
+  mostrandoCamara.value = true
+  await nextTick()
+  await bringCameraContainerIntoView()
+  await startScanner()
+}
+
+const bringCameraContainerIntoView = async () => {
+  await nextTick()
+  const el = cameraContainerRef.value
+  if (!el) return
+  el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })
+}
 
 const startScanner = async () => {
   if (!scanner) {
@@ -62,13 +74,13 @@ const startScanner = async () => {
         Html5QrcodeSupportedFormats.QR_CODE,
         Html5QrcodeSupportedFormats.CODE_128,
         Html5QrcodeSupportedFormats.EAN_13,
-        Html5QrcodeSupportedFormats.EAN_8
+        Html5QrcodeSupportedFormats.EAN_8,
       ],
       experimentalFeatures: {
-        useBarCodeDetectorIfSupported: true
+        useBarCodeDetectorIfSupported: true,
       },
-      verbose: true
-    });
+      verbose: true,
+    })
   }
 
   try {
@@ -76,46 +88,48 @@ const startScanner = async () => {
       { facingMode: 'environment' },
       {
         fps: 10,
-        qrbox: { width: 320, height: 160 }
+        qrbox: { width: 320, height: 160 },
       },
-      (decodedText) => {
-        codigo.value = decodedText;
-        stopScanner();
-        searchProduct();
+      async (decodedText) => {
+        codigo.value = decodedText
+        await stopScanner()
+        await searchProduct()
       },
-      () => { }
-    );
-    mostrarPlaceholder.value = false;
+      () => { },
+    )
+    mostrarPlaceholder.value = false
+    await bringCameraContainerIntoView()
+    await nextTick()
   } catch (err: unknown) {
-    console.error(err);
-    cameraError.value = (err as Error)?.message ?? 'No se pudo iniciar la cámara';
-    mostrandoCamara.value = false;
+    console.error(err)
+    cameraError.value = (err as Error)?.message ?? 'No se pudo iniciar la cámara'
+    mostrandoCamara.value = false
   }
-};
+}
 
 const stopScanner = async () => {
   if (scanner) {
     try {
-      mostrarPlaceholder.value = true;
-      await scanner.stop();
-      scanner.clear();
+      mostrarPlaceholder.value = true
+      await scanner.stop()
+      scanner.clear()
     } catch (err) {
-      console.warn('Scanner stop error', err);
+      console.warn('Scanner stop error', err)
     }
   }
-  mostrandoCamara.value = false;
-};
+  mostrandoCamara.value = false
+}
 
 onBeforeUnmount(() => {
   if (scanner) {
-    scanner.stop().catch(() => { });
+    scanner.stop().catch(() => { })
   }
-});
+})
 
 const clearProduct = () => {
-  productoSeleccionado.value = null;
-  productoNoEncontrado.value = false;
-};
+  productoSeleccionado.value = null
+  productoNoEncontrado.value = false
+}
 </script>
 
 <template>
@@ -139,17 +153,15 @@ const clearProduct = () => {
       </button>
     </div>
 
-    <div v-if="mostrandoCamara" class="mt-4 flex flex-col items-center gap-2">
-      <div id="reader" style="width: 320px; max-width: 100%;"></div>
-      <img v-if="mostrarPlaceholder" src="https://placehold.co/320?text=Preparando..." alt="Placeholder">
+    <div v-if="mostrandoCamara" ref="cameraContainerRef" class="mt-4 flex flex-col items-center gap-2">
+      <div id="reader" tabindex="-1" style="width: 320px; max-width: 100%; min-height: 320px"></div>
+      <img v-if="mostrarPlaceholder" src="https://placehold.co/320?text=Preparando..." alt="Placeholder" />
 
-      <button @click="stopScanner" class="bg-red-500 text-white px-3 py-1 rounded">
-        Cancelar
-      </button>
+      <button @click="stopScanner" tabindex="-1" type="button"
+        class="bg-red-500 text-white px-3 py-1 rounded">Cancelar</button>
     </div>
 
     <div v-if="productoSeleccionado" class="bg-white rounded-lg shadow-lg p-8 text-center flex flex-col gap-8">
-
       <h2 class="text-xl font-bold text-blue-900">
         {{ productoSeleccionado.nombre }}
       </h2>
