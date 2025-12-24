@@ -88,7 +88,8 @@ const startScanner = async () => {
       { facingMode: 'environment' },
       {
         fps: 10,
-        qrbox: { width: 320, height: 160 },
+        qrbox: { width: 250, height: 250 },
+        aspectRatio: 1,
       },
       async (decodedText) => {
         codigo.value = decodedText
@@ -97,6 +98,18 @@ const startScanner = async () => {
       },
       () => { },
     )
+
+    try {
+      await scanner.applyVideoConstraints({
+        width: { min: 640, ideal: 1280, max: 1920 },
+        height: { min: 480, ideal: 720, max: 1080 },
+        // @ts-expect-error focusMode might not be in standard definitions but supported by some browsers
+        focusMode: 'continuous',
+      })
+    } catch (err) {
+      console.warn('Could not apply video constraints', err)
+    }
+
     mostrarPlaceholder.value = false
     await bringCameraContainerIntoView()
     await nextTick()
