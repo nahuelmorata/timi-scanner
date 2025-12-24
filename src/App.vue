@@ -71,7 +71,6 @@ const startScanner = async () => {
   if (!scanner) {
     scanner = new Html5Qrcode('reader', {
       formatsToSupport: [
-        Html5QrcodeSupportedFormats.QR_CODE,
         Html5QrcodeSupportedFormats.CODE_128,
         Html5QrcodeSupportedFormats.EAN_13,
         Html5QrcodeSupportedFormats.EAN_8,
@@ -88,7 +87,6 @@ const startScanner = async () => {
       { facingMode: 'environment' },
       {
         fps: 10,
-        qrbox: { width: 250, height: 250 },
         aspectRatio: 1,
       },
       async (decodedText) => {
@@ -167,11 +165,18 @@ const clearProduct = () => {
     </div>
 
     <div v-if="mostrandoCamara" ref="cameraContainerRef" class="mt-4 flex flex-col items-center gap-2">
-      <div id="reader" tabindex="-1" style="width: 320px; max-width: 100%; min-height: 320px"></div>
+      <div class="relative overflow-hidden rounded-lg" style="width: 320px; height: 320px">
+        <div id="reader" tabindex="-1" class="w-full h-full"></div>
+        <div v-if="!mostrarPlaceholder"
+          class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 border-2 border-red-500 rounded-lg box-content shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]"
+          style="width: 90%; height: 160px; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);">
+        </div>
+      </div>
       <img v-if="mostrarPlaceholder" src="https://placehold.co/320?text=Preparando..." alt="Placeholder" />
 
-      <button @click="stopScanner" tabindex="-1" type="button"
-        class="bg-red-500 text-white px-3 py-1 rounded">Cancelar</button>
+      <button @click="stopScanner" tabindex="-1" type="button" class="bg-red-500 text-white px-3 py-1 rounded">
+        Cancelar
+      </button>
     </div>
 
     <div v-if="productoSeleccionado" class="bg-white rounded-lg shadow-lg p-8 text-center flex flex-col gap-8">
