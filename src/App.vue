@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import axios from 'axios'
-import { computed, nextTick, onBeforeUnmount, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import { API_URL } from './constants'
-import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faCamera } from '@fortawesome/free-solid-svg-icons'
 import CustomSelect from './components/CustomSelect.vue'
 import type { SelectOption } from './components/types'
+import { useScanner } from './composables/useScanner'
 
 type Interes = {
   id: number
@@ -14,12 +14,17 @@ type Interes = {
   valor: number
 }
 
-const codigo = ref('')
+const {
+  codigo,
+  mostrandoCamara,
+  cameraError,
+  mostrarPlaceholder,
+  startScanner,
+  stopScanner
+} = useScanner()
+
 const productoNoEncontrado = ref(false)
-const mostrandoCamara = ref(false)
 const productoSeleccionado = ref<{ nombre: string; precio: number } | null>(null)
-const cameraError = ref<string | null>(null)
-const mostrarPlaceholder = ref(true)
 const interes = ref<Interes[]>([
   { id: 1, nombre: 'Efectivo/Transf/QR/Debito', valor: 0.9 },
   { id: 2, nombre: 'Precio de lista', valor: 1 },
@@ -29,8 +34,6 @@ const selectOptionInteres = computed(() =>
 )
 const interesSeleccionado = ref<Interes>(interes.value[1]!)
 const cameraContainerRef = ref<HTMLElement | null>(null)
-
-let scanner: Html5Qrcode | null = null
 
 const searchProduct = async () => {
   let response
@@ -53,11 +56,10 @@ const searchProduct = async () => {
 }
 
 const openCamera = async () => {
-  cameraError.value = null
-  mostrandoCamara.value = true
-  await nextTick()
+  startScanner(async () => {
+    await searchProduct()
+  })
   await bringCameraContainerIntoView()
-  await startScanner()
 }
 
 const bringCameraContainerIntoView = async () => {
@@ -66,76 +68,6 @@ const bringCameraContainerIntoView = async () => {
   if (!el) return
   el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })
 }
-
-const startScanner = async () => {
-  if (!scanner) {
-    scanner = new Html5Qrcode('reader', {
-      formatsToSupport: [
-        Html5QrcodeSupportedFormats.CODE_128,
-        Html5QrcodeSupportedFormats.EAN_13,
-        Html5QrcodeSupportedFormats.EAN_8,
-      ],
-      experimentalFeatures: {
-        useBarCodeDetectorIfSupported: true,
-      },
-      verbose: true,
-    })
-  }
-
-  try {
-    await scanner.start(
-      { facingMode: 'environment' },
-      {
-        fps: 10,
-        aspectRatio: 1,
-      },
-      async (decodedText) => {
-        codigo.value = decodedText
-        await stopScanner()
-        await searchProduct()
-      },
-      () => { },
-    )
-
-    try {
-      await scanner.applyVideoConstraints({
-        width: { min: 640, ideal: 1280, max: 1920 },
-        height: { min: 480, ideal: 720, max: 1080 },
-        // @ts-expect-error focusMode might not be in standard definitions but supported by some browsers
-        focusMode: 'continuous',
-      })
-    } catch (err) {
-      console.warn('Could not apply video constraints', err)
-    }
-
-    mostrarPlaceholder.value = false
-    await bringCameraContainerIntoView()
-    await nextTick()
-  } catch (err: unknown) {
-    console.error(err)
-    cameraError.value = (err as Error)?.message ?? 'No se pudo iniciar la cámara'
-    mostrandoCamara.value = false
-  }
-}
-
-const stopScanner = async () => {
-  if (scanner) {
-    try {
-      mostrarPlaceholder.value = true
-      await scanner.stop()
-      scanner.clear()
-    } catch (err) {
-      console.warn('Scanner stop error', err)
-    }
-  }
-  mostrandoCamara.value = false
-}
-
-onBeforeUnmount(() => {
-  if (scanner) {
-    scanner.stop().catch(() => { })
-  }
-})
 
 const clearProduct = () => {
   productoSeleccionado.value = null
@@ -162,6 +94,12 @@ const clearProduct = () => {
         class="w-full bg-orange-300 hover:bg-orange-400 text-blue-900 font-bold py-3 rounded-lg">
         Buscar
       </button>
+    </div>
+
+    <div v-if="cameraError" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4"
+      role="alert">
+      <strong class="font-bold">Error: </strong>
+      <span class="block sm:inline">{{ cameraError }}</span>
     </div>
 
     <div v-if="mostrandoCamara" ref="cameraContainerRef" class="mt-4 flex flex-col items-center gap-2">
