@@ -1,19 +1,12 @@
 <script setup lang="ts">
-import axios from 'axios'
 import { computed, nextTick, ref } from 'vue'
-import { API_URL } from './constants'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faCamera } from '@fortawesome/free-solid-svg-icons'
 import CustomSelect from './components/CustomSelect.vue'
 import type { SelectOption } from './components/types'
 import { useScanner } from './composables/useScanner'
 import { getProductByCode } from './services/productService'
-
-type Interes = {
-  id: number
-  nombre: string
-  valor: number
-}
+import type { Interes, Product } from './types'
 
 const {
   codigo,
@@ -25,7 +18,7 @@ const {
 } = useScanner()
 
 const productoNoEncontrado = ref(false)
-const productoSeleccionado = ref<{ nombre: string; precio: number } | null>(null)
+const productoSeleccionado = ref<Product | null>(null)
 const interes = ref<Interes[]>([
   { id: 1, nombre: 'Efectivo/Transf/QR/Debito', valor: 0.9 },
   { id: 2, nombre: 'Precio de lista', valor: 1 },
