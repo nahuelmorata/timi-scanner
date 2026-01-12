@@ -7,6 +7,7 @@ import { faCamera } from '@fortawesome/free-solid-svg-icons'
 import CustomSelect from './components/CustomSelect.vue'
 import type { SelectOption } from './components/types'
 import { useScanner } from './composables/useScanner'
+import { getProductByCode } from './services/productService'
 
 type Interes = {
   id: number
@@ -38,7 +39,7 @@ const cameraContainerRef = ref<HTMLElement | null>(null)
 const searchProduct = async () => {
   let response
   try {
-    response = await axios.get(`${API_URL}/productos/publico?busqueda=${codigo.value}`)
+    response = await getProductByCode(codigo.value)
   } catch (error) {
     console.error(error)
     productoNoEncontrado.value = true
